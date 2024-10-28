@@ -3,6 +3,9 @@
 #include <Wire.h>
 #include <VL53L0X.h>
 
+// constants
+#define DELAY 3
+
 // define motors
 #define ID_FR 2
 #define ID_FL 1
@@ -13,6 +16,17 @@
 #define LSS_BAUD	(LSS_DefaultBaud)
 #define LSS_SERIAL	(Serial)
 
+// define xshut for tof
+#define pin_FR 2
+#define pin_FL 3
+#define pin_RF 4
+#define pin_RB 5
+#define pin_BR 6
+#define pin_BL 7
+#define pin_LB 8
+#define pin_LF 9
+
+
 // types
 enum direction {
   forward = 1,
@@ -21,7 +35,56 @@ enum direction {
 
 // global variables
 LSS motor_FR(ID_FR), motor_FL(ID_FL), motor_BR(ID_BR), motor_BL(ID_BL);
-VL53L0X sensor;
+VL53L0X sensor_FR, sensor_FL, sensor_RF, sensor_RB, sensor_BR, sensor_BL, sensor_LB, sensor_LF;
+
+// TOF sensor
+void init_tof() {
+  pinMode(pin_FR, OUTPUT);
+  pinMode(pin_FL, OUTPUT);
+  pinMode(pin_RF, OUTPUT);
+  pinMode(pin_RB, OUTPUT);
+  pinMode(pin_BR, OUTPUT);
+  pinMode(pin_BL, OUTPUT);
+  pinMode(pin_LB, OUTPUT);
+  pinMode(pin_LF, OUTPUT);
+  delay(DELAY);
+
+  digitalWrite(pin_FR, LOW);
+  sensor_FR.setAddress(pin_FR);
+  delay(DELAY);
+
+  digitalWrite(pin_FL, LOW);
+  sensor_FR.setAddress(pin_FL);
+  delay(DELAY);
+
+  digitalWrite(pin_RF, LOW);
+  sensor_FR.setAddress(pin_RF);
+  delay(DELAY);
+
+  digitalWrite(pin_RB, LOW);
+  sensor_FR.setAddress(pin_RB);
+  delay(DELAY);
+
+  digitalWrite(pin_BR, LOW);
+  sensor_FR.setAddress(pin_BR);
+  delay(DELAY);
+
+  digitalWrite(pin_BL, LOW);
+  sensor_FR.setAddress(pin_BL);
+  delay(DELAY);
+
+  digitalWrite(pin_LB, LOW);
+  sensor_FR.setAddress(pin_LB);
+  delay(DELAY);
+
+  digitalWrite(pin_LF, LOW);
+  sensor_FR.setAddress(pin_LF);
+  delay(DELAY);
+
+  sensor_FR.init();
+  FrontA.setTimeout(100);
+  FrontA.startContinuous();
+}
 
 // Motor movement
 bool move_deg(int deg, int time_limite, direction dir = direction::forward);
@@ -41,8 +104,6 @@ void setup() {
   }
   //LSS::initBus(LSS_SERIAL, LSS_BAUD);
   
-  sensor.setAddress(0x01);
-
   //setting Max rpm
   motor_FR.setMaxSpeedRPM(MAX_VEL);
   motor_FL.setMaxSpeedRPM(MAX_VEL);
