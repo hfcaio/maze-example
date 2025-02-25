@@ -1,10 +1,9 @@
 #include <Arduino.h>
 #include <LSS.h>
 #include <Wire.h>
-#include <VL53L0X.h>
+#include "sensors.h"
 
-// constants
-#define DELAY 3
+#define numberOfSensors 8
 
 // define motors
 #define ID_FR 2
@@ -16,16 +15,16 @@
 #define LSS_BAUD	(LSS_DefaultBaud)
 #define LSS_SERIAL	(Serial)
 
-// define xshut for tof
-#define pin_FR 2
-#define pin_FL 3
-#define pin_RF 4
-#define pin_RB 5
-#define pin_BR 6
-#define pin_BL 7
-#define pin_LB 8
-#define pin_LF 9
-
+SensorList sensors[numberOfSensors] = {
+  {new VL53L0X(), 2 ,0x29 },
+  {new VL53L0X(), 3 ,0x30 },
+  {new VL53L0X(), 4 ,0x31 },
+  {new VL53L0X(), 5 ,0x32 },
+  {new VL53L0X(), 6 ,0x33 },
+  {new VL53L0X(), 7 ,0x34 },
+  {new VL53L0X(), 8 ,0x35 },
+  {new VL53L0X(), 9 ,0x36 }
+};
 
 // types
 enum direction {
@@ -35,56 +34,7 @@ enum direction {
 
 // global variables
 LSS motor_FR(ID_FR), motor_FL(ID_FL), motor_BR(ID_BR), motor_BL(ID_BL);
-VL53L0X sensor_FR, sensor_FL, sensor_RF, sensor_RB, sensor_BR, sensor_BL, sensor_LB, sensor_LF;
 
-// TOF sensor
-void init_tof() {
-  pinMode(pin_FR, OUTPUT);
-  pinMode(pin_FL, OUTPUT);
-  pinMode(pin_RF, OUTPUT);
-  pinMode(pin_RB, OUTPUT);
-  pinMode(pin_BR, OUTPUT);
-  pinMode(pin_BL, OUTPUT);
-  pinMode(pin_LB, OUTPUT);
-  pinMode(pin_LF, OUTPUT);
-  delay(DELAY);
-
-  digitalWrite(pin_FR, LOW);
-  sensor_FR.setAddress(pin_FR);
-  delay(DELAY);
-
-  digitalWrite(pin_FL, LOW);
-  sensor_FR.setAddress(pin_FL);
-  delay(DELAY);
-
-  digitalWrite(pin_RF, LOW);
-  sensor_FR.setAddress(pin_RF);
-  delay(DELAY);
-
-  digitalWrite(pin_RB, LOW);
-  sensor_FR.setAddress(pin_RB);
-  delay(DELAY);
-
-  digitalWrite(pin_BR, LOW);
-  sensor_FR.setAddress(pin_BR);
-  delay(DELAY);
-
-  digitalWrite(pin_BL, LOW);
-  sensor_FR.setAddress(pin_BL);
-  delay(DELAY);
-
-  digitalWrite(pin_LB, LOW);
-  sensor_FR.setAddress(pin_LB);
-  delay(DELAY);
-
-  digitalWrite(pin_LF, LOW);
-  sensor_FR.setAddress(pin_LF);
-  delay(DELAY);
-
-  sensor_FR.init();
-  FrontA.setTimeout(100);
-  FrontA.startContinuous();
-}
 
 // Motor movement
 bool move_deg(int deg, int time_limite, direction dir = direction::forward);
@@ -93,30 +43,27 @@ bool move_vel(int vel, int time, direction dir = forward);
 // logic 
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(9600);
   Wire.begin();
-  sensor.setTimeout(500);
-  if (!sensor.init())
-  {
-    Serial.println("Failed to detect and initialize sensor!");
-    while (1) {}
-  }
+
+  init_tof(sensors);
   //LSS::initBus(LSS_SERIAL, LSS_BAUD);
-  
+
   //setting Max rpm
   motor_FR.setMaxSpeedRPM(MAX_VEL);
   motor_FL.setMaxSpeedRPM(MAX_VEL);
   motor_BR.setMaxSpeedRPM(MAX_VEL);
   motor_BL.setMaxSpeedRPM(MAX_VEL);
-
-
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  Serial.print("dist: ");
-  Serial.println(sensor.readRangeSingleMillimeters());
+  for(int i = 0; i < sizeof(sensors)/sizeof(sensors[0]); i++){
+    Serial.println("================================================");
+    char buffer[50];
+    sprintf(buffer, "Sensor %d: %d mm", i, sensors[i].tof->readRangeSingleMillimeters());
+    Serial.println(buffer);
+  }
 }
 
 bool move_vel(int vel, int time, direction dir = direction::forward) {
